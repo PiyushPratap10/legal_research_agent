@@ -1,0 +1,5 @@
+.venv
+data
+local_bge_model
+v1.0.0/chroma_db
+.env

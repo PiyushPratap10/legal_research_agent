@@ -1,0 +1,22 @@
+constitution_urls=[
+    "https://www.cheggindia.com/general-knowledge/salient-features-of-indian-constitution/",
+    "https://www.drishtiias.com/to-the-points/Paper2/salient-features-of-indian-constitution",
+    "https://www.clearias.com/constitution-of-india/",
+    "https://vajiramandravi.com/upsc-exam/indian-constitution-amendments/",
+    "https://vajiramandravi.com/upsc-exam/important-articles-of-indian-constitution/",
+    "https://byjus.com/free-ias-prep/constitution-of-india-an-overview/",
+    "https://byjus.com/free-ias-prep/important-articles-in-constitution-india/",
+    "https://gkgigs.com/indian-constitution-gk-questions-and-answers/",
+    "https://www.vedantu.com/civics/the-constitution-of-india",     
+]
+criminal_urls=[
+    "https://blog.ipleaders.in/criminal-law-in-india/",
+    "https://www.lawweb.in/2024/06/important-features-of-bharatiya-nyaya.html",
+    "https://www.toprankers.com/bharatiya-nyaya-sanhita",
+    "https://www.lawtool.net/post/the-bharatiya-nagarik-suraksha-sanhita-2023",
+    "https://www.legalbites.in/bharatiya-nagarik-suraksha-sanhita/faqs-on-the-bharatiya-nagarik-suraksha-sanhita-2023-1131173",
+    "https://www.legalbites.in/bharatiya-Sakshya-adhiniyam/faqs-on-the-bharatiya-sakshya-adhiniyam-2023-1132529",
+    "https://www.legalbites.in/bharatiya-Sakshya-adhiniyam//a-comparative-study-between-bharatiya-sakshya-adhiniyam-v-indian-evidence-act-1015626",
+    "https://www.jusscriptumlaw.com/post/bharatiya-nyaya-sanhita-2023",
+    "https://www.studyiq.com/articles/bharatiya-nyaya-sanhita-bill-2023/",
+]
