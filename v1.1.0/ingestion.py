@@ -65,26 +65,26 @@ def ingestion_pipeline():
 
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 
-    # constitution_keyword_index = KeywordTableIndex.from_documents(
-    #     constitution_documents,
-    #     storage_context=StorageContext.from_defaults(vector_store=vector_store),
-    #     show_progress=True
-    # )
-    # constitution_keyword_index.storage_context.persist("./v1.1.0/indexes/constitution/keyword/")
+    constitution_keyword_index = KeywordTableIndex.from_documents(
+        constitution_documents,
+        storage_context=StorageContext.from_defaults(vector_store=vector_store),
+        show_progress=True
+    )
+    constitution_keyword_index.storage_context.persist("./v1.1.0/indexes/constitution/keyword/")
 
-    # criminal_keyword_index = KeywordTableIndex.from_documents(
-    #     criminal_documents,
-    #     storage_context=StorageContext.from_defaults(vector_store=vector_store),
-    #     show_progress=True
-    # )
-    # criminal_keyword_index.storage_context.persist("./v1.1.0/indexes/criminal/keyword/")
+    criminal_keyword_index = KeywordTableIndex.from_documents(
+        criminal_documents,
+        storage_context=StorageContext.from_defaults(vector_store=vector_store),
+        show_progress=True
+    )
+    criminal_keyword_index.storage_context.persist("./v1.1.0/indexes/criminal/keyword/")
 
-    # civil_keyword_index = KeywordTableIndex.from_documents(
-    #     civil_documents,
-    #     storage_context=StorageContext.from_defaults(vector_store=vector_store),
-    #     show_progress=True
-    # )
-    # civil_keyword_index.storage_context.persist("./v1.1.0/indexes/civil/keyword/")
+    civil_keyword_index = KeywordTableIndex.from_documents(
+        civil_documents,
+        storage_context=StorageContext.from_defaults(vector_store=vector_store),
+        show_progress=True
+    )
+    civil_keyword_index.storage_context.persist("./v1.1.0/indexes/civil/keyword/")
 
     constitution_vector_store_index = VectorStoreIndex.from_documents(
         constitution_documents,

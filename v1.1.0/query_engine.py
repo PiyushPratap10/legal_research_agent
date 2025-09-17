@@ -14,6 +14,7 @@ from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.query_engine import RouterQueryEngine, SubQuestionQueryEngine
 import chromadb
 from llama_index.vector_stores.chroma import ChromaVectorStore
+from ddgs import DDGS
 
 Settings.llm = GoogleGenAI(
     model="gemini-2.5-flash",
@@ -117,22 +118,98 @@ def get_search_engine():
     return search_engine
 
 
+def keyword_search_tool(query):
+    """
+    Tool Name: Legal Keyword Search Engine
 
+    Purpose:
+    This tool performs **exact keyword-based search** over the legal corpus. 
+    It is most effective when the user asks about:
+    - Specific legal terms, phrases, or sections (e.g., "Article 370", "Section 144 CrPC")
+    - Precise wording of statutes, amendments, or case laws
+    - Citations, act names, or specific clauses
+    - Direct references to articles, sections, rules, or amendments
 
-if __name__=="__main__":
+    When to Use:
+    - Use when the query is **narrow, fact-based, or lookup-oriented**.
+    - Do NOT use this tool for broad, explanatory, or analytical questions.
+    - Prefer this when the user explicitly mentions a legal reference (e.g., "Article", "Section", "Amendment").
+
+    Output:
+    Returns the **closest matching documents** containing the exact legal references or phrases,
+    which can then be refined or contextualized by the summarization/vector engines.
+    """
+    
     engine = get_search_engine()
-
     multi_hop_query_engine = SubQuestionQueryEngine.from_defaults(
         llm=Settings.llm,
-        response_synthesizer=get_response_synthesizer(response_mode=ResponseMode.REFINE),
+        response_synthesizer=get_response_synthesizer(response_mode=ResponseMode.ACCUMULATE),
         query_engine_tools=[
             QueryEngineTool.from_defaults(
                 query_engine=engine,
-                description="Used for keyword searching and fetching the matching documents."
+                description=("Keyword-based legal search engine. Best for retrieving exact legal references "
+                    "(Articles, Sections, Amendments, case names). Optimized for precise lookups, "
+                    "not for explanations or summaries.")
             )
         ]
     )
-    res = multi_hop_query_engine.query("What are the recent amendments or changes to the laws regarding rape and its punishment in India?")
-    print(res.response)
+    res=multi_hop_query_engine.query(query)
+    return str(res.response)
+
+def summary_tool(query):
+    """ Tool Name: Legal Summarization Engine
+
+    Purpose:
+    This tool performs **high-level summarization and synthesis** across multiple legal documents. 
+    It is designed to provide **coherent, structured, and comprehensive answers** rather than 
+    exact keyword matches.
+
+    When to Use:
+    - Use when the user asks for **explanations, overviews, or summaries** of legal topics.
+    - Best for broad or analytical queries such as:
+        • "Summarize the Fundamental Rights in the Constitution"
+        • "Explain the differences between civil and criminal law"
+        • "Provide an overview of amendments related to freedom of speech"
+    - Do NOT use this tool for pinpoint lookups of specific articles, sections, or phrases 
+      (use the Keyword Search Engine for that).
+
+    Output:
+    Returns a **refined, multi-document summary** synthesized into natural language, 
+    making complex legal information easier to understand."""
+
+    engine = get_summarize_engine()
+    multi_hop_query_engine = SubQuestionQueryEngine.from_defaults(
+        llm=Settings.llm,
+        response_synthesizer=get_response_synthesizer(response_mode=ResponseMode.TREE_SUMMARIZE),
+        query_engine_tools=[
+            QueryEngineTool.from_defaults(
+                query_engine=engine,
+                description=(
+                    "Summarization engine for broad, explanatory, or analytical legal queries. "
+                    "Best for generating overviews, comparisons, or topic-based summaries across documents."
+                )
+            )
+        ]
+    )
+    res=multi_hop_query_engine.query(query)
+    return str(res.response)
+
+def web_search_tool(query):
+    """ Use this tool ONLY when the existing legal document corpus does not 
+    contain relevant info. This searches the web for the latest information. ONLY search for queries related to Legal domains."""
+
+    engine=DDGS()
+    res=""
+    try:
+        results=engine.text(query,max_results=3)
+    except Exception as e:
+        print(e)
+        return "Error searching the web!"
+    
+    for result in results:
+        res+=result["body"]
+    return res if res!="" else "No information found!"
+
+
 
 
