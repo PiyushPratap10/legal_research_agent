@@ -4,3 +4,6 @@ local_bge_model
 v1.0.0/chroma_db
 v1.1.0/chroma_db
 .env
+v1.2.0/notebooks/chroma
+v1.2.0/notebooks/automerging_index_3
+v1.2.0/chroma_db
