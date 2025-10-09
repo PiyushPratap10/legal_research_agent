@@ -1,19 +1,14 @@
-from llama_index.core import load_index_from_storage
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
 from llama_index.embeddings.google_genai.base import types
 from query_preprocessing import query_decomposition
-from llama_index.core import StorageContext
-import chromadb
-from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core import Settings
 import re
 from llama_index.core.prompts import PromptTemplate
 import serpapi
 import requests
 from bs4 import BeautifulSoup
-
-
+import globals
 import os 
 from dotenv import load_dotenv
 load_dotenv()
@@ -55,9 +50,7 @@ Settings.embed_model = GoogleGenAIEmbedding(
         )
 )
 
-client=chromadb.PersistentClient("./v1.2.0/chroma_db")
-collection = client.get_collection("legal-v1.2.0")
-vector_store = ChromaVectorStore(chroma_collection=collection)
+
 
 
 def clean_legal_text(text: str) -> str:
@@ -88,11 +81,8 @@ def clean_legal_text(text: str) -> str:
 
 def generate_constitution_context(query):
 
-    stg_ctx_1 = StorageContext.from_defaults(persist_dir="./v1.2.0/indexes/constitution/vector/",vector_store=vector_store)
-    stg_ctx_2 = StorageContext.from_defaults(persist_dir="./v1.2.0/indexes/constitution/keyword/",vector_store=vector_store)
-    vector_index = load_index_from_storage(storage_context=stg_ctx_1)
-    keyword_index = load_index_from_storage(storage_context=stg_ctx_2)
-
+    vector_index=globals.const_vector_index
+    keyword_index=globals.const_keyword_index
     processed_queries= query_decomposition(query,Settings.llm)
     context = []
     if processed_queries:
@@ -104,15 +94,15 @@ def generate_constitution_context(query):
             
             result1=vector_result[0].text
             result1 = clean_legal_text(result1)
-            if len(result1)>5000:
-                result1=result1[:5000]
+            if len(result1)>7000:
+                result1=result1[:7000]
 
             
             keyword_result = keyword_retriever.retrieve(q)
             result2 = keyword_result[0].text
             result2= clean_legal_text(result2)
-            if len(result2)>5000:
-                result2=result2[:5000]
+            if len(result2)>7000:
+                result2=result2[:7000]
 
             ctx = result1 +"\n" + result2
             context.append(ctx)
@@ -121,10 +111,8 @@ def generate_constitution_context(query):
 
 def generate_criminal_context(query):
 
-    stg_ctx_1 = StorageContext.from_defaults(persist_dir="./v1.2.0/indexes/criminal/vector/",vector_store=vector_store)
-    stg_ctx_2 = StorageContext.from_defaults(persist_dir="./v1.2.0/indexes/criminal/keyword/",vector_store=vector_store)
-    vector_index = load_index_from_storage(storage_context=stg_ctx_1)
-    keyword_index = load_index_from_storage(storage_context=stg_ctx_2)
+    vector_index=globals.cri_vector_index
+    keyword_index = globals.cri_keyword_index
 
     processed_queries= query_decomposition(query,Settings.llm)
     context = []
@@ -137,15 +125,15 @@ def generate_criminal_context(query):
             
             result1=vector_result[0].text
             result1 = clean_legal_text(result1)
-            if len(result1)>5000:
-                result1=result1[:5000]
+            if len(result1)>7000:
+                result1=result1[:7000]
 
             
             keyword_result = keyword_retriever.retrieve(q)
             result2 = keyword_result[0].text
             result2= clean_legal_text(result2)
-            if len(result2)>5000:
-                result2=result2[:5000]
+            if len(result2)>7000:
+                result2=result2[:7000]
 
             ctx = result1 +"\n" + result2
             context.append(ctx)
@@ -154,10 +142,8 @@ def generate_criminal_context(query):
 
 def generate_civil_context(query):
 
-    stg_ctx_1 = StorageContext.from_defaults(persist_dir="./v1.2.0/indexes/civil/vector/",vector_store=vector_store)
-    stg_ctx_2 = StorageContext.from_defaults(persist_dir="./v1.2.0/indexes/civil/keyword/",vector_store=vector_store)
-    vector_index = load_index_from_storage(storage_context=stg_ctx_1)
-    keyword_index = load_index_from_storage(storage_context=stg_ctx_2)
+    vector_index=globals.civ_vector_index
+    keyword_index = globals.civ_keyword_index
 
     processed_queries= query_decomposition(query,Settings.llm)
     context = []
@@ -170,15 +156,15 @@ def generate_civil_context(query):
             
             result1=vector_result[0].text
             result1 = clean_legal_text(result1)
-            if len(result1)>5000:
-                result1=result1[:5000]
+            if len(result1)>7000:
+                result1=result1[:7000]
 
             
             keyword_result = keyword_retriever.retrieve(q)
             result2 = keyword_result[0].text
             result2= clean_legal_text(result2)
-            if len(result2)>5000:
-                result2=result2[:5000]
+            if len(result2)>7000:
+                result2=result2[:7000]
 
             ctx = result1 +"\n" + result2
             context.append(ctx)
@@ -214,7 +200,9 @@ Final Answer:
 
 def get_constitution_response(query):
     """
-    Answer legal research questions strictly related to the **Indian Constitution**.
+    Name - Constitution Research Tool
+
+    Answers legal research questions strictly related to the **Indian Constitution**.
     
     This tool retrieves context from a dedicated Constitution index (vector + keyword) 
     and generates detailed answers with citations (Articles, case laws, etc.).
@@ -252,7 +240,9 @@ def get_constitution_response(query):
 
 def get_criminal_response(query):
     """
-    Answer legal research questions related to **Criminal Law in India**.
+    Name - Criminal Law Research Tool
+
+    Answers legal research questions related to **Criminal Law in India**.
 
     This tool retrieves context from a criminal law index (vector + keyword) 
     and generates detailed answers based on BNS, BNSS, IPC, CrPC, and landmark judgments.
@@ -279,7 +269,7 @@ def get_criminal_response(query):
         str: A legal explanation based only on indexed criminal law resources.
     """
 
-    context,sub_queries = generate_constitution_context(query)
+    context,sub_queries = generate_criminal_context(query)
 
     fmt_prompt = RESPONSE_GENERATION_TEMPLATE.format(
         llm=Settings.llm,
@@ -292,7 +282,9 @@ def get_criminal_response(query):
 
 def get_civil_response(query):
     """
-    Answer legal research questions related to **Civil Law in India**.
+    Name - Civil Law Research Tool
+
+    Answers legal research questions related to **Civil Law in India**.
 
     This tool retrieves context from a civil law index (vector + keyword) 
     and generates detailed answers with references to statutes and case laws.
@@ -316,7 +308,7 @@ def get_civil_response(query):
         str: A civil law explanation based only on indexed civil law documents.
     """
 
-    context,sub_queries = generate_constitution_context(query)
+    context,sub_queries = generate_civil_context(query)
 
     fmt_prompt = RESPONSE_GENERATION_TEMPLATE.format(
         llm=Settings.llm,
@@ -391,7 +383,9 @@ def web_search(query):
 
 def web_search_tool(query):
     """
-    Perform a **real-time web search** and generate an answer using fresh web content. 
+    Name - Web Legal Search Tool
+
+    Performs a **real-time web search** and generate an answer using fresh web content. 
 
     This tool queries Google (via SerpAPI), fetches the top results, scrapes 
     the webpage text, and summarizes them into a legal research answer.  
@@ -438,8 +432,10 @@ def web_search_tool(query):
 
 
 if __name__=="__main__":
-    query="What are the fundamental rights provided by the Indian Constitution?"
-    res=web_search_tool(query)
+    query="definition of rape in indian criminal law."
+    # res=web_search_tool(query)
+    # print(res)
+    res = get_criminal_response(query)
     print(res)
     
     

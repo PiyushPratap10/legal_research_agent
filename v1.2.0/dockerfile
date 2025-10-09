@@ -1,0 +1,37 @@
+# --- Base Image (Builder Stage) ---
+FROM python:3.11-slim AS builder
+WORKDIR /app
+    
+# Install dependencies in a single RUN statement for efficient layer caching
+RUN apt-get update && \
+    apt-get install -y gcc curl && \
+    rm -rf /var/lib/apt/lists/*
+    
+# Copy requirements and install the required dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+    
+# --- Final Production Image ---
+FROM python:3.11-slim
+WORKDIR /app
+    
+# Copy built dependencies from the builder stage
+COPY --from=builder /install /usr/local
+    
+# Ensure the correct path is used for installed Python packages
+ENV PYTHONPATH=/usr/local/lib/python3.11/site-packages
+    
+# Copy the necessary application files    
+COPY main.py .
+COPY agent.py .
+COPY response_generation.py .
+COPY globals.py .
+COPY query_preprocessing.py .
+COPY templates ./templates
+COPY chroma_db ./chroma_db
+COPY indexes ./indexes
+COPY .env .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
